@@ -4,12 +4,15 @@ import os
 
 debug = False
 
-crop = 470
+crop = 460
+offset = 5
 
 corners = open("corners.txt", "r").readlines()
-coords = []
+coords = ["(.Y.)" for x in xrange(0,70)]
 for c in corners:
-  coords.append(c.split(","))
+  line = c.split(",")
+  coords[int(line[0])] = [int(line[1]), int(line[2].strip())]
+  print "Coordinate read: " + str(coords[int(line[0])])
 
 if len(coords) != 70:
   print "Too few coordinates in corners.txt.  Aborting."
@@ -43,8 +46,12 @@ if debug:
 with Image(filename=sys.argv[1]) as img:
   for i in xrange(10):
     for j in xrange(7):
-      currX = coords[10*j + i][0]
-      currY = coords[10*j + i][1]
+      idx = 10*j + i
+      if coords[idx] == "(.Y.)":
+        print "Tits found.  Aborting."
+
+      currX = coords[idx][0] + offset
+      currY = coords[idx][1] + offset
 
       rowNum = str(1 + j) 
       colLetter = chr(ord('A') + i)

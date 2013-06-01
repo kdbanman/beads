@@ -27,12 +27,18 @@ if __name__ == "__main__":
     canvas.create_image(0,0,image=img,anchor="nw")
     canvas.config(scrollregion=canvas.bbox(ALL))
 
-    coords = open("corners.txt","w")
+    coords = open("corners.txt","a")
 
     #function to be called when mouse is clicked
     def printcoords(event):
+        imgX = event.x + int(xscroll.get()[0] * img.width())
+	imgY = event.y + int(yscroll.get()[0] * img.height())
+
+	idx = imgX/483 + 10 * (imgY/483)
+
         #outputting x and y coords to console
-        coords.write(str(event.x) + "," + str(event.y) + "\n")
+	print(str(idx) + "," + str(imgX) + "," + str(imgY) + "\n")
+        coords.write(str(idx) + "," + str(imgX) + "," + str(imgY) + "\n")
     #mouseclick event
     canvas.bind("<Button 1>",printcoords)
 
