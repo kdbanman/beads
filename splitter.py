@@ -58,7 +58,7 @@ with Image(filename=sys.argv[1]) as img:
 
       print "cropping bead " + rowNum + colLetter + "..."
 
-      outFilename = "grid-" + picID + "-bead-" + rowNum + colLetter + ".jpg"
+      outFilename = picID + "-" + rowNum + colLetter + ".jpg"
 
       with img[currX : (currX + crop) , currY : (currY + crop)] as cropped:
         cropped.save(filename=picID+"/"+outFilename)
