@@ -1,3 +1,5 @@
+import sys
+
 def firstCap(s):
   if len(s) == 0:
     return s
@@ -14,6 +16,17 @@ def happyCaps(s):
   
   return ret
 
+def addOrIncrement(dict, key):
+  if key in dict:
+    dict[key] += 1
+  else:
+    dict[key] = 1
+
+def dictStr(dict):
+  lineList = [str(x) + " - " + str(dict[x]) for x in dict]
+  lineList.sort()
+  return "\n".join(lineList)
+
 '''
 0 - grid
 1 - row number
@@ -27,62 +40,119 @@ def happyCaps(s):
 9 - tags
 '''
 
-f = open("bood.tsv")
+try:
+  sys.argv[1]
+except:
+  print "usage: python fool.py <filename>"
+  sys.exit(1)
+
+f = None
+try:
+  f = open(sys.argv[1])
+except:
+  print "maybe incorrect filename.  i couldn't open " + sys.argv[1]
+  sys.exit(1)
 
 lines = f.readlines()
-outLines = ["Handle,Title,Body (HTML),Vendor,Type,Tags,Published,Option1 Name,Option1 Value,Option2 Name,Option2 Value,Option3 Name,Option3 Value,Variant SKU,Variant Grams,Variant Inventory Tracker,Variant Inventory Qty,Variant Inventory Policy,Variant Fulfillment Service,Variant Price,Variant Compare At Price,Variant Requires Shipping,Variant Taxable,Image Src"]
+print str(len(lines)) + " lines read."
+f.close()
+
+outLines = ["Handle,Title,Body (HTML),Vendor,Type,Tags,Published,Option1 Name,Option1 Value,Option2 Name,Option2 Value,Option3 Name,Option3 Value,Variant SKU,Variant Grams,Variant Inventory Tracker,Variant Inventory Qty,Variant Inventory Policy,Variant Fulfillment Service,Variant Price,Variant Compare At Price,Variant Requires Shipping,Variant Taxable,Variant Barcode,Image Src,Image Alt Text"]
+
+beadCount = 0
+vendors = {}
+materials = {}
+tags = {}
 
 lines.pop(0)
 for line in lines:
 
   #ignore all lines containing asterisks
   if "*" in line:
-    lines.remove(line)
+    print "asterisk detected, line rejected:"
+    print "---------------------------------"
+    print line
+    print "---------------------------------\n"
     continue
 
   #google docs txt files are delimited by tab
-  line = line.split("\t")
-  assert(len(line)== 10)
+  fields = line.split("\t")
+  if "" in fields:
+    print "not all necessary fields present, line rejected:"
+    print "---------------------------------"
+    print line
+    print "---------------------------------\n"
+    continue
+
+  ###########################
+  #fields is now a length 10 list of strings
+  ###########################
 
   #white space is bad for you
-  for col in line:
+  for col in fields:
     col = col.strip()
 
   #cubic zirconia consistency
-  line[7] = line[7].replace("CZs","cubic zirconia")
-  line[7] = line[7].replace("czs","cubic zirconia")
-  line[7] = line[7].replace("CZ","cubic zirconia")
-  line[7] = line[7].replace("cz","cubic zirconia")
+  fields[7] = fields[7].lower()
+  fields[7] = fields[7].replace("czs","cubic zirconia")
+  fields[7] = fields[7].replace("cz","cubic zirconia")
+
+  #materials consistency
+  fields[8] = fields[8].lower()
+  fields[8] = fields[8].replace(" and ", " & ")
+
+  #tag consistency
+  fields[9] = fields[9].lower()
+  fields[9] = fields[9].replace("animals","animal")
+  fields[9] = fields[9].replace("animal","animals")
+  fields[9] = fields[9].replace("beverages","drink")
+  fields[9] = fields[9].replace("beverage","drink")
+  fields[9] = fields[9].replace("spacers","spacer")
   
-  #lower case material, tags
-  line[8] = line[8].lower()
-  line[9] = line[9].lower()
+  #make vendor, title, material, tags happycapped
+  fields[6] = happyCaps(fields[6])
+  fields[7] = happyCaps(fields[7])
+  fields[8] = happyCaps(fields[8])
+  fields[9] = happyCaps(fields[9])
 
   #fuck newline
-  line[9] = line[9][:-1]
+  fields[9] = fields[9][:-1]
+
+  #update stats
+  #vvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+  beadCount += 1
+  addOrIncrement(vendors, fields[6])
+
+  matList = fields[8].replace("&", ",").split(",")
+  for mat in matList:
+    addOrIncrement(materials, mat.strip())
+
+  for tag in fields[9].split(","):
+    addOrIncrement(tags, tag.strip())
+  #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   #LOAD THE CANNONS
   outline = []
 
   #HARD TO STARBOARD
   #handle 
-  outline.append(line[0] + "-" + line[1] + line[2])
+  outline.append(fields[0] + "-" + fields[1] + fields[2])
   #title 
-  outline.append(happyCaps(line[7]))
+  outline.append(happyCaps(fields[7]))
   #body 
-  outline.append(firstCap(line[8]) + " " + line[7] + ".  Made by " + line[6])
+  outline.append(firstCap(fields[8].lower()) + " " + fields[7].lower() + ".  Made by " + fields[6])
   #vendor 
-  outline.append(line[6])
+  outline.append(fields[6])
   #type 
   outline.append("Bead")
   #tags 
-  outline.append("\"" + happyCaps(line[9]) + "," + happyCaps(line[8]) + "\"")
+  outline.append("\"" + fields[9] + "\"")
   #published 
   outline.append("TRUE")
   #opt1Name 
-  outline.append("Title")
+  outline.append("Material")
   #opt1Val 
-  outline.append(outline[1])
+  outline.append("\"" + fields[8] + "\"")
   #opt2Name 
   outline.append("")
   #opt2Val 
@@ -94,34 +164,40 @@ for line in lines:
   #sku 
   outline.append(outline[0])
   #grams
-  outline.append("2")
+  outline.append("3")
   #inventory
   outline.append("shopify")
   #quantity
-  outline.append(line[3])
+  outline.append(fields[3])
   #zero policy
   outline.append("deny")
   #fullfillment
   outline.append("manual")
   #price
-  outline.append(line[4])
+  outline.append(fields[4])
   #retail price
-  outline.append(line[5])
+  outline.append(fields[5])
   #shipping
   outline.append("TRUE")
   #taxable
   outline.append("TRUE")
+  #barcode
+  outline.append("")
   #image src
-  outline.append("fat asshole" + outline[0] + ".jpg")
+  outline.append("TODO" + outline[0] + ".jpg")
+  #image alt text
+  outline.append(fields[7])
   
   #FIRE!!!
   outLines.append(",".join(outline))
-
-#play nice
-f.close()
 
 outfile = open("bead_csv.csv", "w")
 for line in outLines:
   outfile.write(line + "\n")
 
 outfile.close()
+
+print str(beadCount) + " beads processed:\n"
+print "Vendors:\n" + dictStr(vendors) + "\n"
+print "Materials:\n" + dictStr(materials) + "\n"
+print "Tags:\n" + dictStr(tags) + "\n"

@@ -28,7 +28,7 @@ try:
   f = open(sys.argv[1])
   f.close()
 except:
-  print "incorrect filename.  i dunno what a " + sys.argv[1] + " is."
+  print "maybe incorrect filename.  i couldn't open " + sys.argv[1]
   sys.exit(1)
 
 if len(sys.argv) == 3 and sys.argv[2] == "debug":
