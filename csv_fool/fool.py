@@ -8,13 +8,20 @@ def firstCap(s):
   else:
     return s[0].upper() + s[1:]
 
+def capAfter(delim, string):
+  return delim.join([firstCap(part) for part in string.split(delim)])
+
 def happyCaps(s):
-  ret = " ".join([firstCap(part) for part in s.split(" ")])
-  ret = "-".join([firstCap(part) for part in ret.split("-")])
-  ret = "\"".join([firstCap(part) for part in ret.split("\"")])
-  ret = ",".join([firstCap(part) for part in ret.split(",")])
+  ret = capAfter(" ", s)
+  ret = capAfter("-", ret)
+  ret = capAfter("\"", ret)
+  ret = capAfter(",", ret)
+  ret = capAfter(".", ret)
   
   return ret
+
+def quoteWrap(s):
+  return "\"" + s + "\""
 
 def addOrIncrement(dict, key):
   if key in dict:
@@ -26,19 +33,6 @@ def dictStr(dict):
   lineList = [str(x) + " - " + str(dict[x]) for x in dict]
   lineList.sort()
   return "\n".join(lineList)
-
-'''
-0 - grid
-1 - row number
-2 - column letter
-3 - quantity
-4 - price
-5 - retail price
-6 - brand
-7 - description
-8 - material
-9 - tags
-'''
 
 try:
   sys.argv[1]
@@ -92,6 +86,19 @@ for line in lines:
   for col in fields:
     col = col.strip()
 
+  '''
+  0 - grid
+  1 - row number
+  2 - column letter
+  3 - quantity
+  4 - price
+  5 - retail price
+  6 - brand
+  7 - description
+  8 - material
+  9 - tags
+  '''
+
   #cubic zirconia consistency
   fields[7] = fields[7].lower()
   fields[7] = fields[7].replace("czs","cubic zirconia")
@@ -114,6 +121,9 @@ for line in lines:
   fields[7] = happyCaps(fields[7])
   fields[8] = happyCaps(fields[8])
   fields[9] = happyCaps(fields[9])
+
+  #legalize title quotes
+  fields[7] = fields[7].replace("\"","\'")
 
   #fuck newline
   fields[9] = fields[9][:-1]
@@ -138,21 +148,21 @@ for line in lines:
   #handle 
   outline.append(fields[0] + "-" + fields[1] + fields[2])
   #title 
-  outline.append(happyCaps(fields[7]))
+  outline.append(quoteWrap(fields[7]))
   #body 
-  outline.append(firstCap(fields[8].lower()) + " " + fields[7].lower() + ".  Made by " + fields[6])
+  outline.append(quoteWrap(firstCap(fields[8].lower()) + " " + fields[7].lower() + ".  Made by " + fields[6]))
   #vendor 
   outline.append(fields[6])
   #type 
   outline.append("Bead")
   #tags 
-  outline.append("\"" + fields[9] + "\"")
+  outline.append(quoteWrap(fields[9] + "," + fields[6]))
   #published 
   outline.append("TRUE")
   #opt1Name 
   outline.append("Material")
   #opt1Val 
-  outline.append("\"" + fields[8] + "\"")
+  outline.append(quoteWrap(fields[8]))
   #opt2Name 
   outline.append("")
   #opt2Val 
@@ -164,7 +174,7 @@ for line in lines:
   #sku 
   outline.append(outline[0])
   #grams
-  outline.append("3")
+  outline.append("6")
   #inventory
   outline.append("shopify")
   #quantity
@@ -184,9 +194,9 @@ for line in lines:
   #barcode
   outline.append("")
   #image src
-  outline.append("TODO" + outline[0] + ".jpg")
+  outline.append("http://cdn.shopify.com/s/files/1/0234/5347/files/" + outline[0] + ".jpg")
   #image alt text
-  outline.append(fields[7])
+  outline.append(quoteWrap(fields[7]))
   
   #FIRE!!!
   outLines.append(",".join(outline))
