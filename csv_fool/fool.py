@@ -70,7 +70,7 @@ for line in lines:
     continue
 
   #google docs txt files are delimited by tab
-  fields = line.split("\t")
+  fields = line.split("\t")[:10]
   if "" in fields:
     print "not all necessary fields present, line rejected:"
     print "---------------------------------"
@@ -99,6 +99,10 @@ for line in lines:
   9 - tags
   '''
 
+  #chiyopia spelling fix
+  fields[6] = fields[6].lower()
+  fields[6] = fields[6].replace("chyiopia","chiyopia")
+
   #cubic zirconia consistency
   fields[7] = fields[7].lower()
   fields[7] = fields[7].replace("czs","cubic zirconia")
@@ -107,6 +111,9 @@ for line in lines:
   #materials consistency
   fields[8] = fields[8].lower()
   fields[8] = fields[8].replace(" and ", " & ")
+  fields[8] = fields[8].replace("&", ",")
+  fields[8] = fields[8].replace("czs","cubic zirconia")
+  fields[8] = fields[8].replace("cz","cubic zirconia")
 
   #tag consistency
   fields[9] = fields[9].lower()
@@ -115,6 +122,15 @@ for line in lines:
   fields[9] = fields[9].replace("beverages","drink")
   fields[9] = fields[9].replace("beverage","drink")
   fields[9] = fields[9].replace("spacers","spacer")
+  fields[9] = fields[9].replace("birthstones","birthstone")
+  fields[9] = fields[9].replace("birthstone","birthstones")
+  fields[9] = fields[9].replace("pearls","pearl")
+  fields[9] = fields[9].replace("pearl","pearls")
+  fields[9] = fields[9].replace("swarovski","swarovsk")
+  fields[9] = fields[9].replace("swarovsk","swarovski")
+  fields[9] = fields[9].replace("transportaion","transportation")
+  fields[9] = fields[9].replace("symbols","symbol")
+  fields[9] = fields[9].replace("symbol","symbols")
   
   #make vendor, title, material, tags happycapped
   fields[6] = happyCaps(fields[6])
@@ -126,19 +142,23 @@ for line in lines:
   fields[7] = fields[7].replace("\"","\'")
 
   #fuck newline
-  fields[9] = fields[9][:-1]
+  if fields[9][-1] == '\n': fields[9] = fields[9][:-1]
 
   #update stats
   #vvvvvvvvvvvvvvvvvvvvvvvvvvvvv
   beadCount += 1
   addOrIncrement(vendors, fields[6])
 
-  matList = fields[8].replace("&", ",").split(",")
+  matList = fields[8].split(",")
   for mat in matList:
     addOrIncrement(materials, mat.strip())
 
-  for tag in fields[9].split(","):
-    addOrIncrement(tags, tag.strip())
+  tagList = fields[9].split(",")
+  tagList = ["Type: " + tag.strip() for tag in tagList]
+  tagList.append("Brand: " + fields[6].strip())
+  tagList += ["Material: " + material.strip() for material in matList]
+  for tag in tagList:
+    addOrIncrement(tags, tag)
   #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   #LOAD THE CANNONS
@@ -156,7 +176,7 @@ for line in lines:
   #type 
   outline.append("Bead")
   #tags 
-  outline.append(quoteWrap(fields[9] + "," + fields[6]))
+  outline.append(quoteWrap(",".join(tagList)))
   #published 
   outline.append("TRUE")
   #opt1Name 
